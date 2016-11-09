@@ -1,0 +1,21 @@
+{
+    "collab_server" : "",
+    "contents" : "library(jsonlite)\nlibrary(dplyr)\nlibrary(purrr)\nlibrary(tidyr)\nlibrary(scales)\nlibrary(ggplot2)\nlibrary(ggalt)\nlibrary(stringr)\nlibrary(rgdal)\nrequire(maptools)\nlibrary(RCurl)\nlibrary(twitteR)\nelection_data_url <- \"https://s3.amazonaws.com/election-data-2016/data/Electiondata_1.json\"\n\nlookup_url <- \"https://s3.amazonaws.com/election-data-2016/data/Lookupdata_1.json\"\n\nlookup_data <- fromJSON(lookup_url, simplifyVector=F)\npolling_places <- data.frame((lookup_data[[4]]))\npolling_places <- data.frame(t(polling_places))\npolling_places$poll_id <- rownames(polling_places)\nrownames(polling_places) <- NULL\npolling_places$poll_id <- gsub(\"X\", \"\", polling_places$poll_id)\ncolnames(polling_places) <- c(\"polling_place\", \"poll_id\")\npolling_places$town <- gsub(\" -.*\", \"\", polling_places$polling_place)\npolling_places$town <- gsub(\"-.*\", \"\", polling_places$town)\npolling_places$poll_spot <- gsub(\" -.*\", \"\", polling_places$polling_place)\npolling_places$poll_spot <- gsub(\".*-\", \"\", polling_places$poll_spot)\npolling_places$town_id <- gsub(\"\\\\-.*\", \"\", polling_places$polling_place)\npolling_places$town_id <- gsub(\"-.*\", \"\", polling_places$town_id)\npolling_places$dashes <- length(grep(\"\\\\-\", polling_places$polling_place))\n\nlibrary(reshape)\n\n\nlookup_data <- fromJSON(lookup_url, simplifyVector=F)\npolling_places <- data.frame((lookup_data[[4]]))\npolling_places <- data.frame(t(polling_places))\npolling_places$poll_id <- rownames(polling_places)\nrownames(polling_places) <- NULL\npolling_places$poll_id <- gsub(\"X\", \"\", polling_places$poll_id)\ncolnames(polling_places) <- c(\"polling_place\", \"poll_id\")\npolling_places3 <- polling_places[c(\"polling_place\")]\npolling_places2 <- transform(polling_places3, polling_place = colsplit(polling_place, split=\"\\\\-\", names=c(\"a\", \"b\", \"c\", \"d\")))\nlibrary(tidyr)\n\ntest <- separate(data=polling_places3, col=polling_place, into=(\"a\", \"b\", \"c\", \"d\"))\n",
+    "created" : 1478612942434.000,
+    "dirty" : true,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "2197847848",
+    "id" : "1A6A5222",
+    "lastKnownWriteTime" : 6,
+    "last_content_update" : 1478648426063,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "tempName" : "Untitled3"
+    },
+    "relative_order" : 10,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

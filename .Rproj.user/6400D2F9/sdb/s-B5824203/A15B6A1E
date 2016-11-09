@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1478670195828.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "A15B6A1E",
+    "lastKnownWriteTime" : 6,
+    "last_content_update" : 1478670195828,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "2D7F0593",
+        "caption" : "trump_lead",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=trump_lead&cache_key=2D7F0593",
+        "displayedObservations" : 5,
+        "environment" : "",
+        "object" : "trump_lead",
+        "preview" : 0,
+        "totalObservations" : 5,
+        "variables" : 14
+    },
+    "relative_order" : 16,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1478710076705.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "612520E5",
+    "lastKnownWriteTime" : 4483043824,
+    "last_content_update" : 1478710076705,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "E7A3CF",
+        "caption" : "race_towns_long",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=race_towns_long&cache_key=E7A3CF",
+        "displayedObservations" : 845,
+        "environment" : "",
+        "object" : "race_towns_long",
+        "preview" : 0,
+        "totalObservations" : 845,
+        "variables" : 5
+    },
+    "relative_order" : 21,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

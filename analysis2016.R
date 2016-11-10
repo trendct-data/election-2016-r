@@ -265,7 +265,7 @@ gg <- gg+ geom_vline(xintercept = 80, linetype="dotted", colour="lightgray")
 gg <- gg + theme(axis.ticks=element_blank())
 #gg <- gg + theme(axis.text = element_text(size = 4))
 gg <- gg + labs(title = "Support for Clinton and Obama",
-                subtitle= "Percent of votes in 2012 compared 2016",
+                subtitle= "Percent of votes in 2012 compared to 2016",
                 caption="Office of the Secretary of the State \n Andrew Ba Tran/TrendCT.org")
 gg <- gg + theme(plot.title=element_text(face="bold", family="Lato Regular", size=19))
 gg <- gg + theme(plot.subtitle=element_text(family="Lato Regular", size=17))
@@ -384,7 +384,7 @@ gg <- gg+ geom_vline(xintercept = 80, linetype="dotted", colour="lightgray")
 gg <- gg + theme(axis.ticks=element_blank())
 #gg <- gg + theme(axis.text = element_text(size = 4))
 gg <- gg + labs(title = "Support for Trump and Romney",
-                subtitle= "Percent of votes in 2012 compared 2016",
+                subtitle= "Percent of votes in 2012 compared to 2016",
                 caption="Office of the Secretary of the State \n Andrew Ba Tran/TrendCT.org")
 gg <- gg + theme(plot.title=element_text(face="bold", family="Lato Regular", size=19))
 gg <- gg + theme(plot.subtitle=element_text(family="Lato Regular", size=17))
@@ -472,6 +472,11 @@ colnames(race_towns_white) <- c("Town", "Percent_White")
 
 per <- left_join(per, race_towns_white)
 
+per2 <- per %>%
+  mutate(Minorities=100-Percent_White) %>%
+  select(id, Minorities, Clinton, Trump) %>%
+  gather("candidate", "percent", 3:4)
+  
 gg <- ggplot(per, aes(Percent_White, Trump))
 gg <- gg + geom_point()
 gg <- gg + labs(x="Percent white population", y="Percent votes for Trump", 
@@ -489,8 +494,77 @@ gg <- gg + theme(axis.line =  element_blank(),
 gg <- gg + theme_bw()
 gg
 
+per2 <- per %>%
+  mutate(Minorities=100-Percent_White) %>%
+  select(id, Percent_White, Clinton, Trump) %>%
+  gather("candidate", "percent", 3:4)
 
+#%>%
+#  filter(percent > 50)
 # Swapped?
+
+gg <- ggplot()
+gg <- gg + geom_point(data=per2, aes(Percent_White, percent, color=candidate))
+gg <- gg + scale_color_manual(values= c("lightskyblue", "tomato"))
+gg <- gg + facet_wrap(~candidate)
+gg <- gg + scale_x_continuous(limits = c(0, 110))
+gg <- gg + scale_y_continuous(limits = c(0, 110))
+gg <- gg + labs(x="Percent white population", y="Percent of votes", 
+                title="Votes compared to white population",
+                subtitle="The larger the white population, the higher the likelihood they supported Donald Trump.",
+                caption="Source: Office of the Secretary of the State \n Andrew Ba Tran/TrendCT.org")
+gg <- gg + theme_bw(base_family="Lato Regular")
+gg <- gg + theme(axis.ticks.y=element_blank())
+#gg <- gg + theme(panel.border=element_blank())
+gg <- gg + theme(legend.key=element_blank())
+gg <- gg + theme(plot.title=element_text(face="bold", family="Lato Regular", size=22))
+gg <- gg + theme(plot.caption=element_text(face="bold", family="Lato Regular", size=9, color="gray28", margin=margin(t=10, r=80)))
+gg <- gg + theme(legend.position="none")
+gg <- gg + theme(strip.background=element_blank())
+gg <- gg + theme(strip.text.x = element_text(size = 10, colour = "grey5"))
+
+gg
+ggsave(gg, file="output/white_population.png", width=8, height=5, type="cairo-png")
+ftp_url <- paste0("ftp://", ftp_login, "@secure.ctmirror.org/projects.ctmirror.org/content/trend/2016/11/election/analysis/white_population.png")
+ftpUpload("output/white_population.png", ftp_url)
+
+## Income?
+
+
+
+race_towns <- getCensus(name="acs5",
+                        vintage=2014,
+                        key=census_key,
+                        vars=c("NAME", "B02001_001E", "B02001_002E", "B02001_003E",
+                               "B02001_004E", "B02001_005E", "B03001_003E"),
+                        region="county subdivision:*", regionin="state:09")
+
+colnames(race_towns) <- c("town", "state", "county", "countysub", "total_pop", "White", "Black", "Indian", "Asian", "Hispanic")
+race_towns <- race_towns[c("town", "total_pop", "White", "Black", "Indian", "Asian", "Hispanic")]
+race_towns <- subset(race_towns, !grepl("County subdivisions", town))
+race_towns$town <- gsub(" town.*", "", race_towns$town)
+
+race_towns_long <- race_towns %>%
+  gather("race_ethnicity", "population", 3:7) %>%
+  mutate(percent_population=round(population/total_pop*100,2))
+
+race_towns_white <- race_towns_long %>%
+  filter(race_ethnicity=="White") %>%
+  select(town, percent_population)
+
+colnames(race_towns_white) <- c("Town", "Percent_White")
+
+per <- left_join(per, race_towns_white)
+
+per2 <- per %>%
+  mutate(Minorities=100-Percent_White) %>%
+  select(id, Minorities, Clinton, Trump) %>%
+  gather("candidate", "percent", 3:4)
+
+```
+
+## Flip map
+
 
 per$winner2012 <- ifelse(per$Obama>per$Romney, "Obama", "Romney")
 per$flip <- ""

@@ -278,7 +278,7 @@ gg <- gg+ geom_vline(xintercept = 80, linetype="dotted", colour="lightgray")
 gg <- gg + theme(axis.ticks=element_blank())
 #gg <- gg + theme(axis.text = element_text(size = 4))
 gg <- gg + labs(title = "Support for Clinton and Obama",
-                subtitle= "Percent of votes in 2012 compared 2016",
+                subtitle= "Percent of votes in 2012 compared to 2016",
                 caption="Office of the Secretary of the State \n Andrew Ba Tran/TrendCT.org")
 gg <- gg + theme(plot.title=element_text(face="bold", family="Lato Regular", size=19))
 gg <- gg + theme(plot.subtitle=element_text(family="Lato Regular", size=17))
@@ -392,7 +392,7 @@ gg <- gg+ geom_vline(xintercept = 80, linetype="dotted", colour="lightgray")
 gg <- gg + theme(axis.ticks=element_blank())
 #gg <- gg + theme(axis.text = element_text(size = 4))
 gg <- gg + labs(title = "Support for Trump and Romney",
-                subtitle= "Percent of votes in 2012 compared 2016",
+                subtitle= "Percent of votes in 2012 compared to 2016",
                 caption="Office of the Secretary of the State \n Andrew Ba Tran/TrendCT.org")
 gg <- gg + theme(plot.title=element_text(face="bold", family="Lato Regular", size=19))
 gg <- gg + theme(plot.subtitle=element_text(family="Lato Regular", size=17))

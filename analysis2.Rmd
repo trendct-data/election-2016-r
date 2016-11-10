@@ -369,7 +369,7 @@ for (i in 2:ncol(selected_tp)) {
 col_names <- c("adults.satisfied.with.area", "feel.safe.to.walk.at.night", "food.insecurity.rate", "housing.insecurity.rate", "transportation.insecurity.rate", "adults.without.bank.account", "underemployed.adults", "white.population", "foreign.born.population", "homeownership.rate", "households.cost.burdened", "ages25.without.hs.diploma",
 "ages25.with.bach.degree", "median.household.income", "poverty.rate", "low.income.rate")
 
-col_names_clean <- c("Rate of adults satisfied with area", "Percent of adults who feel safe to walk area at night", "Food insecurity rate", "Housing insecurity rate", "Transportation insecurity rate", "Adults without a bank ccount", "Underemployed adults", "White population", "Foreign born population", "Home ownership rate", "Household costs burdened", "Adults over 25 without a High School diploma",
+col_names_clean <- c("Rate of adults satisfied with area", "Percent of adults who feel safe to walk area at night", "Food insecurity rate", "Housing insecurity rate", "Transportation insecurity rate", "Adults without a bank account", "Underemployed adults", "White population", "Foreign born population", "Home ownership rate", "Household costs burdened", "Adults over 25 without a High School diploma",
 "Adults over 25 with a bachelor's degree", "Median household income", "Poverty rate", "Low income rate")
 
 wellness_columns <- data.frame(col_names, col_names_clean)
@@ -408,8 +408,8 @@ for (i in 1:nrow(wellness_columns)) {
   trump_per3 <- subset(per3, candidate=="Trump")
   clinton_per3 <- subset(per3, candidate=="Clinton")
 
-  cat("Trump correlation rate: ", cor(trump_per3$percent, trump_per3$Percent_White, use="complete.obs"))
-  cat("\nClinton correlation rate: ", cor(clinton_per3$percent, clinton_per3$Percent_White, use="complete.obs")) 
+  cat("Trump correlation rate: ", cor(trump_per3$percent, trump_per3$column_name, use="complete.obs"))
+  cat("\nClinton correlation rate: ", cor(clinton_per3$percent, clinton_per3$column_name, use="complete.obs")) 
   
   colnames(per3) <- c("Town", "Percent_White", "candidate", "percent", "adults.satisfied.with.area", "feel.safe.to.walk.at.night", "food.insecurity.rate", "housing.insecurity.rate", "transportation.insecurity.rate", "adults.without.bank.account", "underemployed.adults", "white.population", "foreign.born.population", "homeownership.rate", "households.cost.burdened", "ages25.without.hs.diploma",
 "ages25.with.bach.degree", "median.household.income", "poverty.rate", "low.income.rate")

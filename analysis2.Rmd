@@ -25,6 +25,7 @@ require(maptools)
 library(RCurl)
 library(twitteR)
 library(lubridate)
+library(stringr)
 election_data_url <- "https://s3.amazonaws.com/election-data-2016/data/Electiondata_1.json"
 
 lookup_url <- "https://s3.amazonaws.com/election-data-2016/data/Lookupdata_1.json"
@@ -270,13 +271,13 @@ race_towns_long <- race_towns %>%
 
 race_towns_white <- race_towns_long %>%
   filter(race_ethnicity=="White") %>%
-  select(town, percent_population)
+  select(town, total_pop, percent_population)
 
-colnames(race_towns_white) <- c("Town", "Percent_White")
+colnames(race_towns_white) <- c("Town", "Total_Population", "Percent_White")
 
 per <- left_join(per, race_towns_white)
 
-gg <- ggplot(per, aes(Percent_White, Trump))
+gg <- ggplot(per, aes(Percent_White, Trump, size=Total_Population))
 gg <- gg + geom_point()
 gg <- gg + labs(x="Percent white population", y="Percent votes for Trump", 
                 title="Trump votes compared to white population",
@@ -295,8 +296,8 @@ gg
 
 per2 <- per %>%
   mutate(Minorities=100-Percent_White) %>%
-  select(Town, Percent_White, Clinton, Trump) %>%
-  gather("candidate", "percent", 3:4)
+  select(Town, Total_Population, Percent_White, Clinton, Trump) %>%
+  gather("candidate", "percent", 4:5)
 
 ```
 
@@ -305,14 +306,14 @@ per2 <- per %>%
 
 
 gg <- ggplot()
-gg <- gg + geom_point(data=per2, aes(Percent_White, percent, color=candidate))
+gg <- gg + geom_point(data=per2, aes(Percent_White, percent, color=candidate, size=Total_Population))
 gg <- gg + scale_color_manual(values= c("lightskyblue", "tomato"))
 gg <- gg + facet_wrap(~candidate)
 gg <- gg + scale_x_continuous(limits = c(0, 110))
 gg <- gg + scale_y_continuous(limits = c(0, 110))
 gg <- gg + labs(x="Percent white population", y="Percent of votes", 
                 title="Votes compared to white population",
-                subtitle="The larger the white population, the higher the likelihood they supported Donald Trump.",
+                subtitle="The larger the white population, the higher the likelihood they supported Donald Trump.\nSize of circles are relative to town population.",
                 caption="Source: Office of the Secretary of the State \n Andrew Ba Tran/TrendCT.org")
 gg <- gg + theme_bw(base_family="Lato Regular")
 gg <- gg + theme(axis.ticks.y=element_blank())
@@ -384,15 +385,60 @@ for (i in 1:nrow(wellness_columns)) {
 
   
   gg <- ggplot()
-  gg <- gg + geom_point(data=per3, aes(column_name, percent, color=candidate))
+  gg <- gg + geom_point(data=per3, aes(column_name, percent, color=candidate, size=Total_Population))
   gg <- gg + scale_color_manual(values= c("lightskyblue", "tomato"))
   gg <- gg + facet_wrap(~candidate)
   #gg <- gg + scale_x_continuous(limits = c(0, 110))
   gg <- gg + scale_y_continuous(limits = c(0, 110))
   gg <- gg + labs(x=column_title, y="Percent of votes", 
-                  title=paste0("Votes compared to ", column_title),
-                  #subtitle="The larger the white population, the higher the likelihood they supported Donald Trump.",
+                  title=paste0("Votes compared to ", str_to_lower(column_title)),
+                  subtitle="Size of circles are relative to town population.",
                   caption="Source: Office of the Secretary of the State, DataHaven\n Andrew Ba Tran/TrendCT.org")
+  gg <- gg + theme_bw(base_family="Lato Regular")
+  gg <- gg + theme(axis.ticks.y=element_blank())
+  #gg <- gg + theme(panel.border=element_blank())
+  gg <- gg + theme(legend.key=element_blank())
+  gg <- gg + theme(plot.title=element_text(face="bold", family="Lato Regular", size=18))
+gg <- gg + theme(plot.subtitle=element_text(family="Lato Regular", size=9))
+gg <- gg + theme(plot.caption=element_text(family="Lato Regular", size=8, color="gray", margin=margin(t=10, r=80)))
+gg <- gg + theme(axis.text.x = element_text(family="Lato Regular", size=12))
+  gg <- gg + theme(legend.position="none")
+  gg <- gg + theme(strip.background=element_blank())
+
+  print(gg)
+  
+  trump_per3 <- subset(per3, candidate=="Trump")
+  clinton_per3 <- subset(per3, candidate=="Clinton")
+
+  cat("Trump correlation rate: ", cor(trump_per3$percent, trump_per3$column_name, use="complete.obs"))
+  cat("\nClinton correlation rate: ", cor(clinton_per3$percent, clinton_per3$column_name, use="complete.obs")) 
+  
+  colnames(per3) <- c("Town", "Total_Population", "Percent_White", "candidate", "percent", "adults.satisfied.with.area", "feel.safe.to.walk.at.night", "food.insecurity.rate", "housing.insecurity.rate", "transportation.insecurity.rate", "adults.without.bank.account", "underemployed.adults", "white.population", "foreign.born.population", "homeownership.rate", "households.cost.burdened", "ages25.without.hs.diploma",
+"ages25.with.bach.degree", "median.household.income", "poverty.rate", "low.income.rate")
+  
+}
+  
+
+```
+
+```{r continued, echo=FALSE,  warning=F, message=F, fig.height=6, fig.width=8}
+density <- read.csv("data/town_population_density.csv", stringsAsFactors=F)
+density <- density %>%
+  select(Town, population.persqmi, housing.persqmi)
+
+per4 <- left_join(per3, density)
+
+
+  gg <- ggplot()
+  gg <- gg + geom_point(data=per4, aes(population.persqmi, percent, color=candidate, size=Total_Population))
+  gg <- gg + scale_color_manual(values= c("lightskyblue", "tomato"))
+  gg <- gg + facet_wrap(~candidate)
+  #gg <- gg + scale_x_continuous(limits = c(0, 110))
+  gg <- gg + scale_y_continuous(limits = c(0, 110))
+  gg <- gg + labs(x="Population density", y="Percent of votes", 
+                  title="Votes compared to town's population density",
+                  subtitle="Size of circles are relative to town population.",
+                  caption="Source: Office of the Secretary of the State, U.S. Census\n Andrew Ba Tran/TrendCT.org")
   gg <- gg + theme_bw(base_family="Lato Regular")
   gg <- gg + theme(axis.ticks.y=element_blank())
   #gg <- gg + theme(panel.border=element_blank())
@@ -405,17 +451,705 @@ for (i in 1:nrow(wellness_columns)) {
   
   print(gg)
   
-  trump_per3 <- subset(per3, candidate=="Trump")
-  clinton_per3 <- subset(per3, candidate=="Clinton")
+  trump_per3 <- subset(per4, candidate=="Trump")
+  clinton_per3 <- subset(per4, candidate=="Clinton")
 
-  cat("Trump correlation rate: ", cor(trump_per3$percent, trump_per3$column_name, use="complete.obs"))
-  cat("\nClinton correlation rate: ", cor(clinton_per3$percent, clinton_per3$column_name, use="complete.obs")) 
+  cat("Trump correlation rate: ", cor(trump_per3$percent, trump_per3$population.persqmi, use="complete.obs"))
+  cat("\nClinton correlation rate: ", cor(clinton_per3$percent, clinton_per3$population.persqmi, use="complete.obs")) 
   
-  colnames(per3) <- c("Town", "Percent_White", "candidate", "percent", "adults.satisfied.with.area", "feel.safe.to.walk.at.night", "food.insecurity.rate", "housing.insecurity.rate", "transportation.insecurity.rate", "adults.without.bank.account", "underemployed.adults", "white.population", "foreign.born.population", "homeownership.rate", "households.cost.burdened", "ages25.without.hs.diploma",
-"ages25.with.bach.degree", "median.household.income", "poverty.rate", "low.income.rate")
   
-}
+  gg <- ggplot()
+  gg <- gg + geom_point(data=per4, aes(housing.persqmi, percent, color=candidate, size=Total_Population))
+  gg <- gg + scale_color_manual(values= c("lightskyblue", "tomato"))
+  gg <- gg + facet_wrap(~candidate)
+  #gg <- gg + scale_x_continuous(limits = c(0, 110))
+  gg <- gg + scale_y_continuous(limits = c(0, 110))
+  gg <- gg + labs(x="Housing density", y="Percent of votes", 
+                  title="Votes compared to town's housing density",
+                  subtitle="Size of circles are relative to town population.",
+                  caption="Source: Office of the Secretary of the State, U.S. Census\n Andrew Ba Tran/TrendCT.org")
+  gg <- gg + theme_bw(base_family="Lato Regular")
+  gg <- gg + theme(axis.ticks.y=element_blank())
+  #gg <- gg + theme(panel.border=element_blank())
+  gg <- gg + theme(legend.key=element_blank())
+  gg <- gg + theme(plot.title=element_text(face="bold", family="Lato Regular", size=22))
+  gg <- gg + theme(plot.caption=element_text(face="bold", family="Lato Regular", size=9, color="gray28", margin=margin(t=10, r=80)))
+  gg <- gg + theme(legend.position="none")
+  gg <- gg + theme(strip.background=element_blank())
+  gg <- gg + theme(strip.text.x = element_text(size = 10, colour = "grey5"))
   
+  print(gg)
+  
+  trump_per3 <- subset(per4, candidate=="Trump")
+  clinton_per3 <- subset(per4, candidate=="Clinton")
 
+  cat("Trump correlation rate: ", cor(trump_per3$percent, trump_per3$housing.persqmi, use="complete.obs"))
+  cat("\nClinton correlation rate: ", cor(clinton_per3$percent, clinton_per3$housing.persqmi, use="complete.obs")) 
+  
 ```
+
+
+```{r continued2, echo=FALSE,  warning=F, message=F, fig.height=6, fig.width=8}
+hispanic <- race_towns_long %>%
+  filter(race_ethnicity=="Hispanic") %>%
+  select(town, percent_population)
+
+colnames(hispanic) <- c("Town", "Hispanic")
+
+per5 <- left_join(per4, hispanic)
+
+
+  gg <- ggplot()
+  gg <- gg + geom_point(data=per5, aes(Hispanic, percent, color=candidate, size=Total_Population))
+  gg <- gg + scale_color_manual(values= c("lightskyblue", "tomato"))
+  gg <- gg + facet_wrap(~candidate)
+  #gg <- gg + scale_x_continuous(limits = c(0, 110))
+  gg <- gg + scale_y_continuous(limits = c(0, 110))
+  gg <- gg + labs(x="Percent Hispanic", y="Percent of votes", 
+                  title="Votes compared to town's Hispanic population",
+                  subtitle="Size of circles are relative to town population.",
+                  caption="Source: Office of the Secretary of the State, U.S. Census\n Andrew Ba Tran/TrendCT.org")
+  gg <- gg + theme_bw(base_family="Lato Regular")
+  gg <- gg + theme(axis.ticks.y=element_blank())
+  #gg <- gg + theme(panel.border=element_blank())
+  gg <- gg + theme(legend.key=element_blank())
+  gg <- gg + theme(plot.title=element_text(face="bold", family="Lato Regular", size=22))
+  gg <- gg + theme(plot.caption=element_text(face="bold", family="Lato Regular", size=9, color="gray28", margin=margin(t=10, r=80)))
+  gg <- gg + theme(legend.position="none")
+  gg <- gg + theme(strip.background=element_blank())
+  gg <- gg + theme(strip.text.x = element_text(size = 10, colour = "grey5"))
+  
+  print(gg)
+  
+  trump_per3 <- subset(per5, candidate=="Trump")
+  clinton_per3 <- subset(per5, candidate=="Clinton")
+
+  cat("Trump correlation rate: ", cor(trump_per3$percent, trump_per3$Hispanic, use="complete.obs"))
+  cat("\nClinton correlation rate: ", cor(clinton_per3$percent, clinton_per3$Hispanic, use="complete.obs")) 
+  
+  black <- race_towns_long %>%
+  filter(race_ethnicity=="Black") %>%
+  select(town, percent_population)
+colnames(black) <- c("Town", "Black")
+
+per5 <- left_join(per5, black)
+
+
+  gg <- ggplot()
+  gg <- gg + geom_point(data=per5, aes(Black, percent, color=candidate, size=Total_Population))
+  gg <- gg + scale_color_manual(values= c("lightskyblue", "tomato"))
+  gg <- gg + facet_wrap(~candidate)
+  #gg <- gg + scale_x_continuous(limits = c(0, 110))
+  gg <- gg + scale_y_continuous(limits = c(0, 110))
+  gg <- gg + labs(x="Percent Black", y="Percent of votes", 
+                  title="Votes compared to town's Black population",
+                  subtitle="Size of circles are relative to town population.",
+                  caption="Source: Office of the Secretary of the State, U.S. Census\n Andrew Ba Tran/TrendCT.org")
+  gg <- gg + theme_bw(base_family="Lato Regular")
+  gg <- gg + theme(axis.ticks.y=element_blank())
+  #gg <- gg + theme(panel.border=element_blank())
+  gg <- gg + theme(legend.key=element_blank())
+  gg <- gg + theme(plot.title=element_text(face="bold", family="Lato Regular", size=22))
+  gg <- gg + theme(plot.caption=element_text(face="bold", family="Lato Regular", size=9, color="gray28", margin=margin(t=10, r=80)))
+  gg <- gg + theme(legend.position="none")
+  gg <- gg + theme(strip.background=element_blank())
+  gg <- gg + theme(strip.text.x = element_text(size = 10, colour = "grey5"))
+  
+  print(gg)
+  
+  trump_per3 <- subset(per5, candidate=="Trump")
+  clinton_per3 <- subset(per5, candidate=="Clinton")
+
+  cat("Trump correlation rate: ", cor(trump_per3$percent, trump_per3$Black, use="complete.obs"))
+  cat("\nClinton correlation rate: ", cor(clinton_per3$percent, clinton_per3$Black, use="complete.obs")) 
+  
+```
+  
+
+```{r continued3, echo=FALSE,  warning=F, message=F, fig.height=6, fig.width=8}
+
+edu_towns <- getCensus(name="acs5",
+                        vintage=2014,
+                        key=census_key,
+                        vars=c("NAME", "C15002H_001E", "C15002H_002E", "C15002H_003E",
+                               "C15002H_004E", "C15002H_006E", "C15002H_007E", "C15002H_008E", 
+                               "C15002H_009E", "C15002H_011E"),
+                        region="county subdivision:*", regionin="state:09")
+
+colnames(edu_towns) <- c("Town", "state", "county", "countysub", "white_pop", "white_men", "white_men_no", "white_men_hs", "white_men_bach", 
+                          "white_women", "white_women_no", "white_women_hs", "white_women_bach")
+edu_towns <- edu_towns[c("Town", "white_pop", "white_men", "white_men_no", "white_men_hs", "white_men_bach", 
+                           "white_women", "white_women_no", "white_women_hs", "white_women_bach")]
+
+edu_towns <- subset(edu_towns, !grepl("County subdivisions", Town))
+edu_towns$Town <- gsub(" town.*", "", edu_towns$Town)
+
+
+edu_towns$white_men_no_p <- round(edu_towns$white_men_no/edu_towns$white_men*100,2)
+edu_towns$white_men_hs_p <- round(edu_towns$white_men_hs/edu_towns$white_men*100,2)
+edu_towns$white_men_bach_p <- round(edu_towns$white_men_bach/edu_towns$white_men*100,2)
+edu_towns$white_women_no_p <- round(edu_towns$white_women_no/edu_towns$white_women*100,2)
+edu_towns$white_women_hs_p <- round(edu_towns$white_women_hs/edu_towns$white_women*100,2)
+edu_towns$white_women_bach_p <- round(edu_towns$white_women_bach/edu_towns$white_women*100,2)
+
+
+per6 <- left_join(per5, edu_towns)
+
+
+  gg <- ggplot()
+  gg <- gg + geom_point(data=per6, aes(white_men_no_p, percent, color=candidate, size=Total_Population))
+  gg <- gg + scale_color_manual(values= c("lightskyblue", "tomato"))
+  gg <- gg + facet_wrap(~candidate)
+  #gg <- gg + scale_x_continuous(limits = c(0, 110))
+  gg <- gg + scale_y_continuous(limits = c(0, 110))
+  gg <- gg + labs(x="Percent White men no HS diploma", y="Percent of votes", 
+                  title="Votes compared to percent of white men with no diploma",
+                  subtitle="Size of circles are relative to town population.",
+                  caption="Source: Office of the Secretary of the State, U.S. Census\n Andrew Ba Tran/TrendCT.org")
+  gg <- gg + theme_bw(base_family="Lato Regular")
+  gg <- gg + theme(axis.ticks.y=element_blank())
+  #gg <- gg + theme(panel.border=element_blank())
+  gg <- gg + theme(legend.key=element_blank())
+  gg <- gg + theme(plot.title=element_text(face="bold", family="Lato Regular", size=22))
+  gg <- gg + theme(plot.caption=element_text(face="bold", family="Lato Regular", size=9, color="gray28", margin=margin(t=10, r=80)))
+  gg <- gg + theme(legend.position="none")
+  gg <- gg + theme(strip.background=element_blank())
+  gg <- gg + theme(strip.text.x = element_text(size = 10, colour = "grey5"))
+  
+  print(gg)
+  
+  trump_per3 <- subset(per6, candidate=="Trump")
+  clinton_per3 <- subset(per6, candidate=="Clinton")
+
+  cat("Trump correlation rate: ", cor(trump_per3$percent, trump_per3$white_men_no_p, use="complete.obs"))
+  cat("\nClinton correlation rate: ", cor(clinton_per3$percent, clinton_per3$white_men_no_p, use="complete.obs")) 
+  gg <- ggplot()
+  gg <- gg + geom_point(data=per6, aes(white_men_bach_p, percent, color=candidate, size=Total_Population))
+  gg <- gg + scale_color_manual(values= c("lightskyblue", "tomato"))
+  gg <- gg + facet_wrap(~candidate)
+  #gg <- gg + scale_x_continuous(limits = c(0, 110))
+  gg <- gg + scale_y_continuous(limits = c(0, 110))
+  gg <- gg + labs(x="Percent White men with at least a Bachelor's degree", y="Percent of votes", 
+                  title="Votes compared to percent of white men with a bachelor's degree or higher",
+                  subtitle="Size of circles are relative to town population.",
+                  caption="Source: Office of the Secretary of the State, U.S. Census\n Andrew Ba Tran/TrendCT.org")
+  gg <- gg + theme_bw(base_family="Lato Regular")
+  gg <- gg + theme(axis.ticks.y=element_blank())
+  #gg <- gg + theme(panel.border=element_blank())
+  gg <- gg + theme(legend.key=element_blank())
+  gg <- gg + theme(plot.title=element_text(face="bold", family="Lato Regular", size=22))
+  gg <- gg + theme(plot.caption=element_text(face="bold", family="Lato Regular", size=9, color="gray28", margin=margin(t=10, r=80)))
+  gg <- gg + theme(legend.position="none")
+  gg <- gg + theme(strip.background=element_blank())
+  gg <- gg + theme(strip.text.x = element_text(size = 10, colour = "grey5"))
+  
+  print(gg)
+  
+  trump_per3 <- subset(per6, candidate=="Trump")
+  clinton_per3 <- subset(per6, candidate=="Clinton")
+
+  cat("Trump correlation rate: ", cor(trump_per3$percent, trump_per3$white_men_bach_p, use="complete.obs"))
+  cat("\nClinton correlation rate: ", cor(clinton_per3$percent, clinton_per3$white_men_bach_p, use="complete.obs")) 
+
+   gg <- ggplot()
+  gg <- gg + geom_point(data=per6, aes(white_women_no_p, percent, color=candidate, size=Total_Population))
+  gg <- gg + scale_color_manual(values= c("lightskyblue", "tomato"))
+  gg <- gg + facet_wrap(~candidate)
+  #gg <- gg + scale_x_continuous(limits = c(0, 110))
+  gg <- gg + scale_y_continuous(limits = c(0, 110))
+  gg <- gg + labs(x="Percent white women no HS diploma", y="Percent of votes", 
+                  title="Votes compared to percent of white women with no diploma",
+                  subtitle="Size of circles are relative to town population.",
+                  caption="Source: Office of the Secretary of the State, U.S. Census\n Andrew Ba Tran/TrendCT.org")
+  gg <- gg + theme_bw(base_family="Lato Regular")
+  gg <- gg + theme(axis.ticks.y=element_blank())
+  #gg <- gg + theme(panel.border=element_blank())
+  gg <- gg + theme(legend.key=element_blank())
+  gg <- gg + theme(plot.title=element_text(face="bold", family="Lato Regular", size=22))
+  gg <- gg + theme(plot.caption=element_text(face="bold", family="Lato Regular", size=9, color="gray28", margin=margin(t=10, r=80)))
+  gg <- gg + theme(legend.position="none")
+  gg <- gg + theme(strip.background=element_blank())
+  gg <- gg + theme(strip.text.x = element_text(size = 10, colour = "grey5"))
+  
+  print(gg)
+  
+  trump_per3 <- subset(per6, candidate=="Trump")
+  clinton_per3 <- subset(per6, candidate=="Clinton")
+
+  cat("Trump correlation rate: ", cor(trump_per3$percent, trump_per3$white_women_no_p, use="complete.obs"))
+  cat("\nClinton correlation rate: ", cor(clinton_per3$percent, clinton_per3$white_women_no_p, use="complete.obs")) 
+  gg <- ggplot()
+  gg <- gg + geom_point(data=per6, aes(white_men_bach_p, percent, color=candidate, size=Total_Population))
+  gg <- gg + scale_color_manual(values= c("lightskyblue", "tomato"))
+  gg <- gg + facet_wrap(~candidate)
+  #gg <- gg + scale_x_continuous(limits = c(0, 110))
+  gg <- gg + scale_y_continuous(limits = c(0, 110))
+  gg <- gg + labs(x="Percent white women with at least a Bachelor's degree", y="Percent of votes", 
+                  title="Votes compared to percent of white women with a bachelor's degree or higher",
+                  subtitle="Size of circles are relative to town population.",
+                  caption="Source: Office of the Secretary of the State, U.S. Census\n Andrew Ba Tran/TrendCT.org")
+  gg <- gg + theme_bw(base_family="Lato Regular")
+  gg <- gg + theme(axis.ticks.y=element_blank())
+  #gg <- gg + theme(panel.border=element_blank())
+  gg <- gg + theme(legend.key=element_blank())
+  gg <- gg + theme(plot.title=element_text(face="bold", family="Lato Regular", size=22))
+  gg <- gg + theme(plot.caption=element_text(face="bold", family="Lato Regular", size=9, color="gray28", margin=margin(t=10, r=80)))
+  gg <- gg + theme(legend.position="none")
+  gg <- gg + theme(strip.background=element_blank())
+  gg <- gg + theme(strip.text.x = element_text(size = 10, colour = "grey5"))
+  
+  print(gg)
+  
+  trump_per3 <- subset(per6, candidate=="Trump")
+  clinton_per3 <- subset(per6, candidate=="Clinton")
+
+  cat("Trump correlation rate: ", cor(trump_per3$percent, trump_per3$white_women_bach_p, use="complete.obs"))
+  cat("\nClinton correlation rate: ", cor(clinton_per3$percent, clinton_per3$white_women_bach_p, use="complete.obs")) 
+  
+  
+```
+  
+  
+```{r continued4, echo=FALSE,  warning=F, message=F, fig.height=6, fig.width=8}
+
+edu_towns2 <- getCensus(name="acs5",
+                        vintage=2014,
+                        key=census_key,
+                        vars=c("NAME", "B15002_001E", "B15002_002E", "B15002_011E",
+                               "B15002_015E", "B15002_019E", "B15002_028E", "B15002_032E"),
+                        region="county subdivision:*", regionin="state:09")
+
+colnames(edu_towns2) <- c("Town", "state", "county", "countysub", "total_e", "total_men", 
+                         "total_men_hs", "total_men_bach", 
+                          "total_women", "total_women_hs", "total_women_bach")
+
+edu_towns2 <- edu_towns2[c("Town", "total_e", "total_men", 
+                         "total_men_hs", "total_men_bach", 
+                         "total_women", "total_women_hs", "total_women_bach")]
+
+edu_towns2 <- subset(edu_towns2, !grepl("County subdivisions", Town))
+edu_towns2$Town <- gsub(" town.*", "", edu_towns2$Town)
+
+
+edu_towns2$men_hs_p <- round(edu_towns2$total_men_hs/edu_towns2$total_e*100,2)
+edu_towns2$men_bach_p <- round(edu_towns2$total_men_bach/edu_towns2$total_e*100,2)
+edu_towns2$women_hs_p <- round(edu_towns2$total_women_hs/edu_towns2$total_e*100,2)
+edu_towns2$women_bach_p <- round(edu_towns2$total_women_bach/edu_towns2$total_e*100,2)
+
+
+per6 <- left_join(per6, edu_towns2)
+
+
+  gg <- ggplot()
+  gg <- gg + geom_point(data=per6, aes(men_hs_p, percent, color=candidate, size=Total_Population))
+  gg <- gg + scale_color_manual(values= c("lightskyblue", "tomato"))
+  gg <- gg + facet_wrap(~candidate)
+  #gg <- gg + scale_x_continuous(limits = c(0, 110))
+  gg <- gg + scale_y_continuous(limits = c(0, 110))
+  gg <- gg + labs(x="Percent men with HS diploma", y="Percent of votes", 
+                  title="Votes compared to percent of white men HS education",
+                  subtitle="Size of circles are relative to town population.",
+                  caption="Source: Office of the Secretary of the State, U.S. Census\n Andrew Ba Tran/TrendCT.org")
+  gg <- gg + theme_bw(base_family="Lato Regular")
+  gg <- gg + theme(axis.ticks.y=element_blank())
+  #gg <- gg + theme(panel.border=element_blank())
+  gg <- gg + theme(legend.key=element_blank())
+  gg <- gg + theme(plot.title=element_text(face="bold", family="Lato Regular", size=22))
+  gg <- gg + theme(plot.caption=element_text(face="bold", family="Lato Regular", size=9, color="gray28", margin=margin(t=10, r=80)))
+  gg <- gg + theme(legend.position="none")
+  gg <- gg + theme(strip.background=element_blank())
+  gg <- gg + theme(strip.text.x = element_text(size = 10, colour = "grey5"))
+  
+  print(gg)
+  
+  trump_per3 <- subset(per6, candidate=="Trump")
+  clinton_per3 <- subset(per6, candidate=="Clinton")
+
+  cat("Trump correlation rate: ", cor(trump_per3$percent, trump_per3$men_hs_p, use="complete.obs"))
+  cat("\nClinton correlation rate: ", cor(clinton_per3$percent, clinton_per3$men_hs_p, use="complete.obs")) 
+  
+  
+  gg <- ggplot()
+  gg <- gg + geom_point(data=per6, aes(men_bach_p, percent, color=candidate, size=Total_Population))
+  gg <- gg + scale_color_manual(values= c("lightskyblue", "tomato"))
+  gg <- gg + facet_wrap(~candidate)
+  #gg <- gg + scale_x_continuous(limits = c(0, 110))
+  gg <- gg + scale_y_continuous(limits = c(0, 110))
+  gg <- gg + labs(x="Percent men with a HS degree", y="Percent of votes", 
+                  title="Votes compared to percent of men with a HS degree",
+                  subtitle="Size of circles are relative to town population.",
+                  caption="Source: Office of the Secretary of the State, U.S. Census\n Andrew Ba Tran/TrendCT.org")
+  gg <- gg + theme_bw(base_family="Lato Regular")
+  gg <- gg + theme(axis.ticks.y=element_blank())
+  #gg <- gg + theme(panel.border=element_blank())
+  gg <- gg + theme(legend.key=element_blank())
+  gg <- gg + theme(plot.title=element_text(face="bold", family="Lato Regular", size=22))
+  gg <- gg + theme(plot.caption=element_text(face="bold", family="Lato Regular", size=9, color="gray28", margin=margin(t=10, r=80)))
+  gg <- gg + theme(legend.position="none")
+  gg <- gg + theme(strip.background=element_blank())
+  gg <- gg + theme(strip.text.x = element_text(size = 10, colour = "grey5"))
+  
+  print(gg)
+  
+  trump_per3 <- subset(per6, candidate=="Trump")
+  clinton_per3 <- subset(per6, candidate=="Clinton")
+
+  cat("Trump correlation rate: ", cor(trump_per3$percent, trump_per3$men_bach_p, use="complete.obs"))
+  cat("\nClinton correlation rate: ", cor(clinton_per3$percent, clinton_per3$men_bach_p, use="complete.obs")) 
+
+  gg <- ggplot()
+  gg <- gg + geom_point(data=per6, aes(women_hs_p, percent, color=candidate, size=Total_Population))
+  gg <- gg + scale_color_manual(values= c("lightskyblue", "tomato"))
+  gg <- gg + facet_wrap(~candidate)
+  #gg <- gg + scale_x_continuous(limits = c(0, 110))
+  gg <- gg + scale_y_continuous(limits = c(0, 110))
+  gg <- gg + labs(x="Percent women with a HS diploma", y="Percent of votes", 
+                  title="Votes compared to percent of women with a HS diploma",
+                  subtitle="Size of circles are relative to town population.",
+                  caption="Source: Office of the Secretary of the State, U.S. Census\n Andrew Ba Tran/TrendCT.org")
+  gg <- gg + theme_bw(base_family="Lato Regular")
+  gg <- gg + theme(axis.ticks.y=element_blank())
+  #gg <- gg + theme(panel.border=element_blank())
+  gg <- gg + theme(legend.key=element_blank())
+  gg <- gg + theme(plot.title=element_text(face="bold", family="Lato Regular", size=22))
+  gg <- gg + theme(plot.caption=element_text(face="bold", family="Lato Regular", size=9, color="gray28", margin=margin(t=10, r=80)))
+  gg <- gg + theme(legend.position="none")
+  gg <- gg + theme(strip.background=element_blank())
+  gg <- gg + theme(strip.text.x = element_text(size = 10, colour = "grey5"))
+  
+  print(gg)
+  
+  trump_per3 <- subset(per6, candidate=="Trump")
+  clinton_per3 <- subset(per6, candidate=="Clinton")
+
+  cat("Trump correlation rate: ", cor(trump_per3$percent, trump_per3$women_hs_p, use="complete.obs"))
+  cat("\nClinton correlation rate: ", cor(clinton_per3$percent, clinton_per3$women_hs_p, use="complete.obs"))
+  
+  gg <- ggplot()
+  gg <- gg + geom_point(data=per6, aes(women_bach_p, percent, color=candidate, size=Total_Population))
+  gg <- gg + scale_color_manual(values= c("lightskyblue", "tomato"))
+  gg <- gg + facet_wrap(~candidate)
+  #gg <- gg + scale_x_continuous(limits = c(0, 110))
+  gg <- gg + scale_y_continuous(limits = c(0, 110))
+  gg <- gg + labs(x="Percent women with a Bachelor's degree", y="Percent of votes", 
+                  title="Votes compared to percent of women with a bachelor's degree",
+                  subtitle="Size of circles are relative to town population.",
+                  caption="Source: Office of the Secretary of the State, U.S. Census\n Andrew Ba Tran/TrendCT.org")
+  gg <- gg + theme_bw(base_family="Lato Regular")
+  gg <- gg + theme(axis.ticks.y=element_blank())
+  #gg <- gg + theme(panel.border=element_blank())
+  gg <- gg + theme(legend.key=element_blank())
+  gg <- gg + theme(plot.title=element_text(face="bold", family="Lato Regular", size=22))
+  gg <- gg + theme(plot.caption=element_text(face="bold", family="Lato Regular", size=9, color="gray28", margin=margin(t=10, r=80)))
+  gg <- gg + theme(legend.position="none")
+  gg <- gg + theme(strip.background=element_blank())
+  gg <- gg + theme(strip.text.x = element_text(size = 10, colour = "grey5"))
+  
+  print(gg)
+  
+  trump_per3 <- subset(per6, candidate=="Trump")
+  clinton_per3 <- subset(per6, candidate=="Clinton")
+
+  cat("Trump correlation rate: ", cor(trump_per3$percent, trump_per3$women_bach_p, use="complete.obs"))
+  cat("\nClinton correlation rate: ", cor(clinton_per3$percent, clinton_per3$women_bach_p, use="complete.obs")) 
+  
+```
+
+```{r continued5, echo=FALSE,  warning=F, message=F, fig.height=6, fig.width=8}
+well <- read.csv("data/wellbeing.csv", stringsAsFactors=F)
+
+per7 <- left_join(per6, well)
+
+gg <- ggplot()
+  gg <- gg + geom_point(data=per7, aes(Improve.Score, percent, color=candidate, size=Total_Population))
+  gg <- gg + scale_color_manual(values= c("lightskyblue", "tomato"))
+  gg <- gg + facet_wrap(~candidate)
+  #gg <- gg + scale_x_continuous(limits = c(0, 110))
+  gg <- gg + scale_y_continuous(limits = c(0, 110))
+  gg <- gg + labs(x="Town improving score", y="Percent of votes", 
+                  title="Votes compared to whether residents think town is improving",
+                  subtitle="Size of circles are relative to town population.",
+                  caption="Source: Office of the Secretary of the State, U.S. Census\n Andrew Ba Tran/TrendCT.org")
+  gg <- gg + theme_bw(base_family="Lato Regular")
+  gg <- gg + theme(axis.ticks.y=element_blank())
+  #gg <- gg + theme(panel.border=element_blank())
+  gg <- gg + theme(legend.key=element_blank())
+  gg <- gg + theme(plot.title=element_text(face="bold", family="Lato Regular", size=22))
+  gg <- gg + theme(plot.caption=element_text(face="bold", family="Lato Regular", size=9, color="gray28", margin=margin(t=10, r=80)))
+  gg <- gg + theme(legend.position="none")
+  gg <- gg + theme(strip.background=element_blank())
+  gg <- gg + theme(strip.text.x = element_text(size = 10, colour = "grey5"))
+  
+  print(gg)
+  
+  trump_per3 <- subset(per7, candidate=="Trump")
+  clinton_per3 <- subset(per7, candidate=="Clinton")
+
+  cat("Trump correlation rate: ", cor(trump_per3$percent, trump_per3$Improve.Score, use="complete.obs"))
+  cat("\nClinton correlation rate: ", cor(clinton_per3$percent, clinton_per3$Improve.Score, use="complete.obs")) 
+
+  
+gg <- ggplot()
+  gg <- gg + geom_point(data=per7, aes(no.influence.local.gov, percent, color=candidate, size=Total_Population))
+  gg <- gg + scale_color_manual(values= c("lightskyblue", "tomato"))
+  gg <- gg + facet_wrap(~candidate)
+  #gg <- gg + scale_x_continuous(limits = c(0, 110))
+  gg <- gg + scale_y_continuous(limits = c(0, 110))
+  gg <- gg + labs(x="Percent of those with no influence", y="Percent of votes", 
+                  title="Votes compared to whether residents with no infulence",
+                  subtitle="Size of circles are relative to town population.",
+                  caption="Source: Office of the Secretary of the State, U.S. Census\n Andrew Ba Tran/TrendCT.org")
+  gg <- gg + theme_bw(base_family="Lato Regular")
+  gg <- gg + theme(axis.ticks.y=element_blank())
+  #gg <- gg + theme(panel.border=element_blank())
+  gg <- gg + theme(legend.key=element_blank())
+  gg <- gg + theme(plot.title=element_text(face="bold", family="Lato Regular", size=22))
+  gg <- gg + theme(plot.caption=element_text(face="bold", family="Lato Regular", size=9, color="gray28", margin=margin(t=10, r=80)))
+  gg <- gg + theme(legend.position="none")
+  gg <- gg + theme(strip.background=element_blank())
+  gg <- gg + theme(strip.text.x = element_text(size = 10, colour = "grey5"))
+  
+  print(gg)
+  
+  trump_per3 <- subset(per7, candidate=="Trump")
+  clinton_per3 <- subset(per7, candidate=="Clinton")
+
+  cat("Trump correlation rate: ", cor(trump_per3$percent, trump_per3$no.influence.local.gov, use="complete.obs"))
+  cat("\nClinton correlation rate: ", cor(clinton_per3$percent, clinton_per3$no.influence.local.gov, use="complete.obs")) 
+
+gg <- ggplot()
+  gg <- gg + geom_point(data=per7, aes(satisfaction.score, percent, color=candidate, size=Total_Population))
+  gg <- gg + scale_color_manual(values= c("lightskyblue", "tomato"))
+  gg <- gg + facet_wrap(~candidate)
+  #gg <- gg + scale_x_continuous(limits = c(0, 110))
+  gg <- gg + scale_y_continuous(limits = c(0, 110))
+  gg <- gg + labs(x="Satisfaction score", y="Percent of votes", 
+                  title="Votes compared to whether residents are satisfied",
+                  subtitle="Size of circles are relative to town population.",
+                  caption="Source: Office of the Secretary of the State, U.S. Census\n Andrew Ba Tran/TrendCT.org")
+  gg <- gg + theme_bw(base_family="Lato Regular")
+  gg <- gg + theme(axis.ticks.y=element_blank())
+  #gg <- gg + theme(panel.border=element_blank())
+  gg <- gg + theme(legend.key=element_blank())
+  gg <- gg + theme(plot.title=element_text(face="bold", family="Lato Regular", size=22))
+  gg <- gg + theme(plot.caption=element_text(face="bold", family="Lato Regular", size=9, color="gray28", margin=margin(t=10, r=80)))
+  gg <- gg + theme(legend.position="none")
+  gg <- gg + theme(strip.background=element_blank())
+  gg <- gg + theme(strip.text.x = element_text(size = 10, colour = "grey5"))
+  
+  print(gg)
+  
+  trump_per3 <- subset(per7, candidate=="Trump")
+  clinton_per3 <- subset(per7, candidate=="Clinton")
+
+  cat("Trump correlation rate: ", cor(trump_per3$percent, trump_per3$satisfaction.score, use="complete.obs"))
+  cat("\nClinton correlation rate: ", cor(clinton_per3$percent, clinton_per3$satisfaction.score, use="complete.obs")) 
+
+  
+gg <- ggplot()
+  gg <- gg + geom_point(data=per7, aes(anxious.score, percent, color=candidate, size=Total_Population))
+  gg <- gg + scale_color_manual(values= c("lightskyblue", "tomato"))
+  gg <- gg + facet_wrap(~candidate)
+  #gg <- gg + scale_x_continuous(limits = c(0, 110))
+  gg <- gg + scale_y_continuous(limits = c(0, 110))
+  gg <- gg + labs(x="Anxiety score", y="Percent of votes", 
+                  title="Votes compared to whether residents are anxious",
+                  subtitle="Size of circles are relative to town population.",
+                  caption="Source: Office of the Secretary of the State, U.S. Census\n Andrew Ba Tran/TrendCT.org")
+  gg <- gg + theme_bw(base_family="Lato Regular")
+  gg <- gg + theme(axis.ticks.y=element_blank())
+  #gg <- gg + theme(panel.border=element_blank())
+  gg <- gg + theme(legend.key=element_blank())
+  gg <- gg + theme(plot.title=element_text(face="bold", family="Lato Regular", size=22))
+  gg <- gg + theme(plot.caption=element_text(face="bold", family="Lato Regular", size=9, color="gray28", margin=margin(t=10, r=80)))
+  gg <- gg + theme(legend.position="none")
+  gg <- gg + theme(strip.background=element_blank())
+  gg <- gg + theme(strip.text.x = element_text(size = 10, colour = "grey5"))
+  
+  print(gg)
+  
+  trump_per3 <- subset(per7, candidate=="Trump")
+  clinton_per3 <- subset(per7, candidate=="Clinton")
+
+  cat("Trump correlation rate: ", cor(trump_per3$percent, trump_per3$anxious.score, use="complete.obs"))
+  cat("\nClinton correlation rate: ", cor(clinton_per3$percent, clinton_per3$anxious.score, use="complete.obs")) 
+  
+  
+  
+gg <- ggplot()
+  gg <- gg + geom_point(data=per7, aes(Much.worse, percent, color=candidate, size=Total_Population))
+  gg <- gg + scale_color_manual(values= c("lightskyblue", "tomato"))
+  gg <- gg + facet_wrap(~candidate)
+  #gg <- gg + scale_x_continuous(limits = c(0, 110))
+  gg <- gg + scale_y_continuous(limits = c(0, 110))
+  gg <- gg + labs(x="Percent much worse", y="Percent of votes", 
+                  title="Votes compared to percent of residents who feel life is much worse",
+                  subtitle="Size of circles are relative to town population.",
+                  caption="Source: Office of the Secretary of the State, U.S. Census\n Andrew Ba Tran/TrendCT.org")
+  gg <- gg + theme_bw(base_family="Lato Regular")
+  gg <- gg + theme(axis.ticks.y=element_blank())
+  #gg <- gg + theme(panel.border=element_blank())
+  gg <- gg + theme(legend.key=element_blank())
+  gg <- gg + theme(plot.title=element_text(face="bold", family="Lato Regular", size=22))
+  gg <- gg + theme(plot.caption=element_text(face="bold", family="Lato Regular", size=9, color="gray28", margin=margin(t=10, r=80)))
+  gg <- gg + theme(legend.position="none")
+  gg <- gg + theme(strip.background=element_blank())
+  gg <- gg + theme(strip.text.x = element_text(size = 10, colour = "grey5"))
+  
+  print(gg)
+  
+  trump_per3 <- subset(per7, candidate=="Trump")
+  clinton_per3 <- subset(per7, candidate=="Clinton")
+
+  cat("Trump correlation rate: ", cor(trump_per3$percent, trump_per3$Much.worse, use="complete.obs"))
+  cat("\nClinton correlation rate: ", cor(clinton_per3$percent, clinton_per3$Much.worse, use="complete.obs")) 
+  
+  
+  
+gg <- ggplot()
+  gg <- gg + geom_point(data=per7, aes(financial.score, percent, color=candidate, size=Total_Population))
+  gg <- gg + scale_color_manual(values= c("lightskyblue", "tomato"))
+  gg <- gg + facet_wrap(~candidate)
+  #gg <- gg + scale_x_continuous(limits = c(0, 110))
+  gg <- gg + scale_y_continuous(limits = c(0, 110))
+  gg <- gg + labs(x="Financial security score", y="Percent of votes", 
+                  title="Votes compared to whether residents feel financially secure",
+                  subtitle="Size of circles are relative to town population.",
+                  caption="Source: Office of the Secretary of the State, U.S. Census\n Andrew Ba Tran/TrendCT.org")
+  gg <- gg + theme_bw(base_family="Lato Regular")
+  gg <- gg + theme(axis.ticks.y=element_blank())
+  #gg <- gg + theme(panel.border=element_blank())
+  gg <- gg + theme(legend.key=element_blank())
+  gg <- gg + theme(plot.title=element_text(face="bold", family="Lato Regular", size=22))
+  gg <- gg + theme(plot.caption=element_text(face="bold", family="Lato Regular", size=9, color="gray28", margin=margin(t=10, r=80)))
+  gg <- gg + theme(legend.position="none")
+  gg <- gg + theme(strip.background=element_blank())
+  gg <- gg + theme(strip.text.x = element_text(size = 10, colour = "grey5"))
+  
+  print(gg)
+  
+  trump_per3 <- subset(per7, candidate=="Trump")
+  clinton_per3 <- subset(per7, candidate=="Clinton")
+
+  cat("Trump correlation rate: ", cor(trump_per3$percent, trump_per3$financial.score, use="complete.obs"))
+  cat("\nClinton correlation rate: ", cor(clinton_per3$percent, clinton_per3$financial.score, use="complete.obs")) 
+  
+  
+gg <- ggplot()
+  gg <- gg + geom_point(data=per7, aes(Poor, percent, color=candidate, size=Total_Population))
+  gg <- gg + scale_color_manual(values= c("lightskyblue", "tomato"))
+  gg <- gg + facet_wrap(~candidate)
+  #gg <- gg + scale_x_continuous(limits = c(0, 110))
+  gg <- gg + scale_y_continuous(limits = c(0, 110))
+  gg <- gg + labs(x="Poor satisfaction", y="Percent of votes", 
+                  title="Votes compared to population who feel poor satisfaction",
+                  subtitle="Size of circles are relative to town population.",
+                  caption="Source: Office of the Secretary of the State, U.S. Census\n Andrew Ba Tran/TrendCT.org")
+  gg <- gg + theme_bw(base_family="Lato Regular")
+  gg <- gg + theme(axis.ticks.y=element_blank())
+  #gg <- gg + theme(panel.border=element_blank())
+  gg <- gg + theme(legend.key=element_blank())
+  gg <- gg + theme(plot.title=element_text(face="bold", family="Lato Regular", size=22))
+  gg <- gg + theme(plot.caption=element_text(face="bold", family="Lato Regular", size=9, color="gray28", margin=margin(t=10, r=80)))
+  gg <- gg + theme(legend.position="none")
+  gg <- gg + theme(strip.background=element_blank())
+  gg <- gg + theme(strip.text.x = element_text(size = 10, colour = "grey5"))
+  
+  print(gg)
+  
+  trump_per3 <- subset(per7, candidate=="Trump")
+  clinton_per3 <- subset(per7, candidate=="Clinton")
+
+  cat("Trump correlation rate: ", cor(trump_per3$percent, trump_per3$Poor, use="complete.obs"))
+  cat("\nClinton correlation rate: ", cor(clinton_per3$percent, clinton_per3$Poor, use="complete.obs")) 
+  
+  
+gg <- ggplot()
+  gg <- gg + geom_point(data=per7, aes(Completely, percent, color=candidate, size=Total_Population))
+  gg <- gg + scale_color_manual(values= c("lightskyblue", "tomato"))
+  gg <- gg + facet_wrap(~candidate)
+  #gg <- gg + scale_x_continuous(limits = c(0, 110))
+  gg <- gg + scale_y_continuous(limits = c(0, 110))
+  gg <- gg + labs(x="Completely anxious", y="Percent of votes", 
+                  title="Votes compared to whether residents feel anxious",
+                  subtitle="Size of circles are relative to town population.",
+                  caption="Source: Office of the Secretary of the State, U.S. Census\n Andrew Ba Tran/TrendCT.org")
+  gg <- gg + theme_bw(base_family="Lato Regular")
+  gg <- gg + theme(axis.ticks.y=element_blank())
+  #gg <- gg + theme(panel.border=element_blank())
+  gg <- gg + theme(legend.key=element_blank())
+  gg <- gg + theme(plot.title=element_text(face="bold", family="Lato Regular", size=22))
+  gg <- gg + theme(plot.caption=element_text(face="bold", family="Lato Regular", size=9, color="gray28", margin=margin(t=10, r=80)))
+  gg <- gg + theme(legend.position="none")
+  gg <- gg + theme(strip.background=element_blank())
+  gg <- gg + theme(strip.text.x = element_text(size = 10, colour = "grey5"))
+  
+  print(gg)
+  
+  trump_per3 <- subset(per7, candidate=="Trump")
+  clinton_per3 <- subset(per7, candidate=="Clinton")
+
+  cat("Trump correlation rate: ", cor(trump_per3$percent, trump_per3$Completely, use="complete.obs"))
+  cat("\nClinton correlation rate: ", cor(clinton_per3$percent, clinton_per3$Completely, use="complete.obs")) 
+  
+  
+gg <- ggplot()
+  gg <- gg + geom_point(data=per7, aes(Just.getting.by, percent, color=candidate, size=Total_Population))
+  gg <- gg + scale_color_manual(values= c("lightskyblue", "tomato"))
+  gg <- gg + facet_wrap(~candidate)
+  #gg <- gg + scale_x_continuous(limits = c(0, 110))
+  gg <- gg + scale_y_continuous(limits = c(0, 110))
+  gg <- gg + labs(x="Just getting by percent", y="Percent of votes", 
+                  title="Votes compared to residents just getting by",
+                  subtitle="Size of circles are relative to town population.",
+                  caption="Source: Office of the Secretary of the State, U.S. Census\n Andrew Ba Tran/TrendCT.org")
+  gg <- gg + theme_bw(base_family="Lato Regular")
+  gg <- gg + theme(axis.ticks.y=element_blank())
+  #gg <- gg + theme(panel.border=element_blank())
+  gg <- gg + theme(legend.key=element_blank())
+  gg <- gg + theme(plot.title=element_text(face="bold", family="Lato Regular", size=22))
+  gg <- gg + theme(plot.caption=element_text(face="bold", family="Lato Regular", size=9, color="gray28", margin=margin(t=10, r=80)))
+  gg <- gg + theme(legend.position="none")
+  gg <- gg + theme(strip.background=element_blank())
+  gg <- gg + theme(strip.text.x = element_text(size = 10, colour = "grey5"))
+  
+  print(gg)
+  
+  trump_per3 <- subset(per7, candidate=="Trump")
+  clinton_per3 <- subset(per7, candidate=="Clinton")
+
+  cat("Trump correlation rate: ", cor(trump_per3$percent, trump_per3$Just.getting.by, use="complete.obs"))
+  cat("\nClinton correlation rate: ", cor(clinton_per3$percent, clinton_per3$Just.getting.by, use="complete.obs")) 
+  
+  
+gg <- ggplot()
+  gg <- gg + geom_point(data=per7, aes(Finding.it.difficult, percent, color=candidate, size=Total_Population))
+  gg <- gg + scale_color_manual(values= c("lightskyblue", "tomato"))
+  gg <- gg + facet_wrap(~candidate)
+  #gg <- gg + scale_x_continuous(limits = c(0, 110))
+  gg <- gg + scale_y_continuous(limits = c(0, 110))
+  gg <- gg + labs(x="Finding it difficult", y="Percent of votes", 
+                  title="Votes compared to whether residents are feeling it difficult to get by",
+                  subtitle="Size of circles are relative to town population.",
+                  caption="Source: Office of the Secretary of the State, U.S. Census\n Andrew Ba Tran/TrendCT.org")
+  gg <- gg + theme_bw(base_family="Lato Regular")
+  gg <- gg + theme(axis.ticks.y=element_blank())
+  #gg <- gg + theme(panel.border=element_blank())
+  gg <- gg + theme(legend.key=element_blank())
+  gg <- gg + theme(plot.title=element_text(face="bold", family="Lato Regular", size=22))
+  gg <- gg + theme(plot.caption=element_text(face="bold", family="Lato Regular", size=9, color="gray28", margin=margin(t=10, r=80)))
+  gg <- gg + theme(legend.position="none")
+  gg <- gg + theme(strip.background=element_blank())
+  gg <- gg + theme(strip.text.x = element_text(size = 10, colour = "grey5"))
+  
+  print(gg)
+  
+  trump_per3 <- subset(per7, candidate=="Trump")
+  clinton_per3 <- subset(per7, candidate=="Clinton")
+
+  cat("Trump correlation rate: ", cor(trump_per3$percent, trump_per3$Finding.it.difficult, use="complete.obs"))
+  cat("\nClinton correlation rate: ", cor(clinton_per3$percent, clinton_per3$Finding.it.difficult, use="complete.obs")) 
+  
+```
+
 

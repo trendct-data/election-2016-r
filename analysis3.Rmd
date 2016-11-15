@@ -25,6 +25,7 @@ require(maptools)
 library(RCurl)
 library(twitteR)
 library(lubridate)
+library(ctnamecleaner)
 election_data_url <- "https://s3.amazonaws.com/election-data-2016/data/Electiondata_1.json"
 
 lookup_url <- "https://s3.amazonaws.com/election-data-2016/data/Lookupdata_1.json"

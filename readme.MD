@@ -11,14 +11,10 @@ This repository contains data and methodlogy behind the following Trend CT stori
 
 # Walkthroughs
 
-* 2016 CT post-election analysis
- - [[HTML](https://trendct-data.github.io/election-2016-r/)] [[RMarkdown](https://github.com/trendct-data/election-2016-r/blob/master/index.Rmd)] 
-* Analysis II (Correlations between votes and selected Census and DataHaven data points)
- - [[HTML](https://trendct-data.github.io/election-2016-r/analysis2.html)] [[RMarkdown](https://github.com/trendct-data/election-2016-r/blob/master/analysis2.Rmd)] 
- * Analysis III (Correlations between votes and all DataHaven data points)
- - [[HTML](https://trendct-data.github.io/election-2016-r/analysis3.html)] [[RMarkdown](https://github.com/trendct-data/election-2016-r/blob/master/analysis3.Rmd)] 
- * Analysis IV (Correlations between diff in 2016 and 2016 votes and selected Census and DataHaven data points)
- - [[HTML](https://trendct-data.github.io/election-2016-r/analysis4.html)] [[RMarkdown](https://github.com/trendct-data/election-2016-r/blob/master/analysis4.Rmd)] 
+* 2016 CT post-election analysis - [[HTML](https://trendct-data.github.io/election-2016-r/)] [[RMarkdown](https://github.com/trendct-data/election-2016-r/blob/master/index.Rmd)] 
+* Analysis II (Correlations between votes and selected Census and DataHaven data points) - [[HTML](https://trendct-data.github.io/election-2016-r/analysis2.html)] [[RMarkdown](https://github.com/trendct-data/election-2016-r/blob/master/analysis2.Rmd)] 
+ * Analysis III (Correlations between votes and all DataHaven data points) - [[HTML](https://trendct-data.github.io/election-2016-r/analysis3.html)] [[RMarkdown](https://github.com/trendct-data/election-2016-r/blob/master/analysis3.Rmd)] 
+ * Analysis IV (Correlations between diff in 2016 and 2016 votes and selected Census and DataHaven data points) - [[HTML](https://trendct-data.github.io/election-2016-r/analysis4.html)] [[RMarkdown](https://github.com/trendct-data/election-2016-r/blob/master/analysis4.Rmd)] 
  
 ### The Data
 

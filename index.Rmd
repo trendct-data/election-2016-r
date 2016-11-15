@@ -5,6 +5,20 @@ date: "November 9, 2016"
 output: html_document
 ---
 
+
+This is exploratory data visualization used to write the story [What the 2016 presidential election returns reveal about Connecticut voters](http://trendct.org/2016/11/15/what-the-2016-presidential-election-results-say-about-connecticut/)
+
+**2016 CT post-election analysis**
+
+Visit [the repo](https://github.com/trendct-data/election-2016-r) for this story for more walkthroughs, data, and scripts used in the analysis.
+
+Additional walkthroughs:
+
+* 2016 CT post-election analysis - [[HTML](https://trendct-data.github.io/election-2016-r/)] [[RMarkdown](https://github.com/trendct-data/election-2016-r/blob/master/index.Rmd)] 
+* Analysis II (Correlations between votes and selected Census and DataHaven data points) - [[HTML](https://trendct-data.github.io/election-2016-r/analysis2.html)] [[RMarkdown](https://github.com/trendct-data/election-2016-r/blob/master/analysis2.Rmd)] 
+ * Analysis III (Correlations between votes and all DataHaven data points) - [[HTML](https://trendct-data.github.io/election-2016-r/analysis3.html)] [[RMarkdown](https://github.com/trendct-data/election-2016-r/blob/master/analysis3.Rmd)] 
+ * Analysis IV (Correlations between diff in 2016 and 2016 votes and selected Census and [DataHaven](http://www.ctdatahaven.org/reports/datahaven-community-wellbeing-survey) data points.) - [[HTML](https://trendct-data.github.io/election-2016-r/analysis4.html)] [[RMarkdown](https://github.com/trendct-data/election-2016-r/blob/master/analysis4.Rmd)] 
+ 
 ```{r setup, echo=FALSE, warning=F, message=F, fig.width=8, fig.height=12}
 
 y2012 <- read.csv("data/2012_election_results.csv", stringsAsFactors=F)

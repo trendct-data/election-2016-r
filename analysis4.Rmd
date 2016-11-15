@@ -5,6 +5,20 @@ date: "November 9, 2016"
 output: html_document
 ---
 
+This is exploratory data visualization used to write the story [What the 2016 presidential election returns reveal about Connecticut voters](http://trendct.org/2016/11/15/what-the-2016-presidential-election-results-say-about-connecticut/)
+
+**Correlations between diff in 2016 and 2016 votes and selected Census and [DataHaven](http://www.ctdatahaven.org/reports/datahaven-community-wellbeing-survey) data points.**
+
+Visit [the repo](https://github.com/trendct-data/election-2016-r) for this story for more walkthroughs, data, and scripts used in the analysis.
+
+Additional walkthroughs:
+
+* 2016 CT post-election analysis - [[HTML](https://trendct-data.github.io/election-2016-r/)] [[RMarkdown](https://github.com/trendct-data/election-2016-r/blob/master/index.Rmd)] 
+* Analysis II (Correlations between votes and selected Census and DataHaven data points) - [[HTML](https://trendct-data.github.io/election-2016-r/analysis2.html)] [[RMarkdown](https://github.com/trendct-data/election-2016-r/blob/master/analysis2.Rmd)] 
+ * Analysis III (Correlations between votes and all DataHaven data points) - [[HTML](https://trendct-data.github.io/election-2016-r/analysis3.html)] [[RMarkdown](https://github.com/trendct-data/election-2016-r/blob/master/analysis3.Rmd)] 
+ * Analysis IV (Correlations between diff in 2016 and 2016 votes and selected Census and DataHaven data points) - [[HTML](https://trendct-data.github.io/election-2016-r/analysis4.html)] [[RMarkdown](https://github.com/trendct-data/election-2016-r/blob/master/analysis4.Rmd)] 
+ 
+
 ```{r setup, echo=FALSE, warning=F, message=F, fig.width=8, fig.height=12}
 
 y2012 <- read.csv("data/2012_election_results.csv", stringsAsFactors=F)
@@ -893,6 +907,35 @@ gg <- ggplot()
 
   
 gg <- ggplot()
+  gg <- gg + geom_point(data=per7, aes(Much.worse, percent, color=candidate, size=Total_Population))
+  gg <- gg + scale_color_manual(values= c("lightskyblue", "tomato"))
+  gg <- gg + facet_wrap(~candidate)
+  #
+ 
+  gg <- gg + labs(x="Percent residents who consider town declining", y="Percent of votes", 
+                  title="Votes compared to whether residents think town is not improving",
+                  subtitle="Size of circles are relative to town population.",
+                  caption="Source: Office of the Secretary of the State, U.S. Census\n Andrew Ba Tran/TrendCT.org")
+  gg <- gg + theme_bw(base_family="Lato Regular")
+  gg <- gg + theme(axis.ticks.y=element_blank())
+  #gg <- gg + theme(panel.border=element_blank())
+  gg <- gg + theme(legend.key=element_blank())
+   gg <- gg + theme(plot.title=element_text(face="bold", family="Lato Regular", size=18))
+gg <- gg + theme(plot.subtitle=element_text(family="Lato Regular", size=9))
+gg <- gg + theme(plot.caption=element_text(family="Lato Regular", size=8, color="gray", margin=margin(t=10, r=80)))
+  gg <- gg + theme(legend.position="none")
+  gg <- gg + theme(strip.background=element_blank())
+
+  print(gg)
+  
+  trump_per3 <- subset(per7, candidate=="Trump")
+  clinton_per3 <- subset(per7, candidate=="Clinton")
+
+  cat("Trump correlation rate: ", cor(trump_per3$percent, trump_per3$Improve.Score, use="complete.obs"))
+  cat("\nClinton correlation rate: ", cor(clinton_per3$percent, clinton_per3$Improve.Score, use="complete.obs")) 
+
+  
+gg <- ggplot()
   gg <- gg + geom_point(data=per7, aes(no.influence.local.gov, percent, color=candidate, size=Total_Population))
   gg <- gg + scale_color_manual(values= c("lightskyblue", "tomato"))
   gg <- gg + facet_wrap(~candidate)
@@ -1024,12 +1067,13 @@ gg <- ggplot()
   gg <- gg + theme(axis.ticks.y=element_blank())
   #gg <- gg + theme(panel.border=element_blank())
   gg <- gg + theme(legend.key=element_blank())
-  gg <- gg + theme(plot.title=element_text(face="bold", family="Lato Regular", size=22))
-  gg <- gg + theme(plot.caption=element_text(face="bold", family="Lato Regular", size=9, color="gray28", margin=margin(t=10, r=80)))
+ gg <- gg + theme(plot.title=element_text(face="bold", family="Lato Regular", size=18))
+gg <- gg + theme(plot.subtitle=element_text(family="Lato Regular", size=9))
+gg <- gg + theme(plot.caption=element_text(family="Lato Regular", size=8, color="gray", margin=margin(t=10, r=80)))
+gg <- gg + theme(axis.text.x = element_text(family="Lato Regular", size=12))
   gg <- gg + theme(legend.position="none")
   gg <- gg + theme(strip.background=element_blank())
-  gg <- gg + theme(strip.text.x = element_text(size = 10, colour = "grey5"))
-  
+
   print(gg)
   
   trump_per3 <- subset(per7, candidate=="Trump")
@@ -1053,12 +1097,13 @@ gg <- ggplot()
   gg <- gg + theme(axis.ticks.y=element_blank())
   #gg <- gg + theme(panel.border=element_blank())
   gg <- gg + theme(legend.key=element_blank())
-  gg <- gg + theme(plot.title=element_text(face="bold", family="Lato Regular", size=22))
-  gg <- gg + theme(plot.caption=element_text(face="bold", family="Lato Regular", size=9, color="gray28", margin=margin(t=10, r=80)))
+  gg <- gg + theme(plot.title=element_text(face="bold", family="Lato Regular", size=18))
+gg <- gg + theme(plot.subtitle=element_text(family="Lato Regular", size=9))
+gg <- gg + theme(plot.caption=element_text(family="Lato Regular", size=8, color="gray", margin=margin(t=10, r=80)))
+gg <- gg + theme(axis.text.x = element_text(family="Lato Regular", size=12))
   gg <- gg + theme(legend.position="none")
   gg <- gg + theme(strip.background=element_blank())
-  gg <- gg + theme(strip.text.x = element_text(size = 10, colour = "grey5"))
-  
+
   print(gg)
   
   trump_per3 <- subset(per7, candidate=="Trump")
